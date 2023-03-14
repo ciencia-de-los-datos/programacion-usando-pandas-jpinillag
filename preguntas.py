@@ -22,7 +22,8 @@ def pregunta_01():
     40
 
     """
-    return
+    filas=tbl0.shape[0]
+    return filas
 
 
 def pregunta_02():
@@ -33,7 +34,8 @@ def pregunta_02():
     4
 
     """
-    return
+    columnas=tbl0.shape[1]
+    return columnas
 
 
 def pregunta_03():
@@ -50,7 +52,8 @@ def pregunta_03():
     Name: _c1, dtype: int64
 
     """
-    return
+    registros_c1=tbl0.groupby("_c1")._c1.count()
+    return registros_c1
 
 
 def pregunta_04():
@@ -65,7 +68,8 @@ def pregunta_04():
     E    4.785714
     Name: _c2, dtype: float64
     """
-    return
+    promedio_c2=tbl0.groupby(["_c1"])._c2.mean()
+    return promedio_c2
 
 
 def pregunta_05():
@@ -82,7 +86,8 @@ def pregunta_05():
     E    9
     Name: _c2, dtype: int64
     """
-    return
+    maximo_c2=tbl0.groupby(["_c1"])._c2.max()
+    return maximo_c2
 
 
 def pregunta_06():
@@ -94,7 +99,13 @@ def pregunta_06():
     ['A', 'B', 'C', 'D', 'E', 'F', 'G']
 
     """
-    return
+    #identidico valores unicos
+    unicos_c4=tbl1["_c4"].unique()
+    unicos_mayus=[]
+    #los convierto en mayusculas y agurego a la lista a devolver
+    for i in unicos_c4:
+        unicos_mayus.append(i.upper())
+    return sorted(unicos_mayus)
 
 
 def pregunta_07():
@@ -110,7 +121,12 @@ def pregunta_07():
     E    67
     Name: _c2, dtype: int64
     """
-    return
+    suma_c2=tbl0.groupby(["_c1"])._c2.sum()
+    return suma_c2
+
+#La uso para la pregubta 8
+def sum_c0_c2(df):
+    return df[0]+df[2]
 
 
 def pregunta_08():
@@ -128,7 +144,8 @@ def pregunta_08():
     39   39   E    5  1998-01-26    44
 
     """
-    return
+    tbl0["suma"]=tbl0.apply(sum_c0_c2,axis=1)
+    return tbl0
 
 
 def pregunta_09():
@@ -146,7 +163,11 @@ def pregunta_09():
     39   39   E    5  1998-01-26  1998
 
     """
-    return
+    #Formula que se enseño el profe, no funciona por que hay una fecha inexistente
+    #tbl0["year"]=pd.DatetimeIndex(tbl0["_c3"]).year
+
+    tbl0["year"]=tbl0["_c3"].apply(lambda x: x[:4])
+    return tbl0
 
 
 def pregunta_10():
@@ -163,7 +184,18 @@ def pregunta_10():
     3   D                  1:2:3:5:5:7
     4   E  1:1:2:3:3:4:5:5:5:6:7:8:8:9
     """
-    return
+    df=tbl0
+    #paso la columna a string, asi se deja concatenar mejor
+    df["_c2"]= df["_c2"].astype(str)
+    #ordeno la columna previamente casteada
+    df=df.sort_values(["_c2"])
+    #agrupo y aplico sum, como va a "sumar" strings lo que hace es concatenarlos, y ya estan ordenados alfabeticamnete
+    df=df.groupby(["_c1"],as_index=False)._c2.sum()
+    #separo cada carcater por : con la funcón establecida anteriormente
+    df["_c2"]=df["_c2"].apply(lambda x: ":".join(x))
+    #sin esto no me coincide con el test
+    df=df.set_index("_c1")
+    return df
 
 
 def pregunta_11():
@@ -182,7 +214,14 @@ def pregunta_11():
     38   38      d,e
     39   39    a,d,f
     """
-    return
+    df=tbl1
+    #ordenar la columna que quiero agrupar
+    df=df.sort_values(["_c4"])
+    #agrupamos por suma, como son string me los concatena
+    df=df.groupby(["_c0"],as_index=False)._c4.sum()
+    #separamos por , las letras
+    df["_c4"]=df["_c4"].apply(lambda x: ",".join(x))
+    return df
 
 
 def pregunta_12():
@@ -200,7 +239,19 @@ def pregunta_12():
     38   38                    eee:0,fff:9,iii:2
     39   39                    ggg:3,hhh:8,jjj:5
     """
-    return
+    df=tbl2
+    #ordenar la columna que deseamos consultar por letras y números
+    df=df.sort_values(["_c5a","_c5b"])
+    #volemos la columna del entero un string para poderlo concatenar con la otra columna y el separador deseado
+    df["_c5b"]= df["_c5b"].astype(str)
+    df["_c5"]=df["_c5a"]+":"+df["_c5b"]+","
+    #eliminamos la dos columnas que ya no queremos usar
+    df=df.drop(["_c5a","_c5b"],axis=1)
+    #agrupamos por la columna deseada
+    df=df.groupby("_c0",as_index=False)._c5.sum()
+    #elimar el último caracter de cada resgistro en la columna _c5
+    df["_c5"]=df["_c5"].apply(lambda x: x[:-1])
+    return df
 
 
 def pregunta_13():
@@ -217,4 +268,10 @@ def pregunta_13():
     E    275
     Name: _c5b, dtype: int64
     """
-    return
+    tabla0=tbl0
+    tabla2=tbl2
+    #unir las dos tablass
+    df=pd.merge(tabla2, tabla0, on="_c0")
+    #agrupar por la columna clave _c1 sumando la deseada _c5b
+    suma_c5b=df.groupby(["_c1"])._c5b.sum()
+    return suma_c5b
